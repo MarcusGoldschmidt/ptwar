@@ -31,3 +31,12 @@ func (gl *GameLoop) AddSystem(ctx context.Context, order system.Order, sys syste
 
 	gl.systems[order] = append(gl.setupEvents[order], sys)
 }
+
+func (gl *GameLoop) AddSystems(ctx context.Context, getSystems system.GetSystems) {
+	gl.rw.Lock()
+	defer gl.rw.Unlock()
+
+	for _, sys := range getSystems.Systems(ctx) {
+		gl.systems[sys.Order] = append(gl.systems[sys.Order], sys.System)
+	}
+}

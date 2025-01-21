@@ -2,7 +2,6 @@ package system
 
 import (
 	"context"
-	"ptwar/pkg/world"
 	"time"
 )
 
@@ -22,5 +21,21 @@ type TickMessage struct {
 }
 
 type System interface {
-	OnTick(ctx context.Context, tick TickMessage, state *world.State)
+	OnTick(ctx context.Context, tick TickMessage)
+}
+
+type GetSystems interface {
+	Systems(ctx context.Context) []SystemOrder
+}
+
+type SystemOrder struct {
+	Order  Order
+	System System
+}
+
+func NewSystemOrder(order Order, system System) SystemOrder {
+	return SystemOrder{
+		Order:  order,
+		System: system,
+	}
 }

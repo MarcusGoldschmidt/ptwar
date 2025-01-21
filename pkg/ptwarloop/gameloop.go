@@ -18,7 +18,7 @@ type GameLoopConfig struct {
 }
 
 type GameLoop struct {
-	l              *zap.Logger
+	logger         *zap.Logger
 	rw             sync.RWMutex
 	ticketCount    uint64
 	ticketDuration time.Duration
@@ -58,7 +58,7 @@ func NewGameLoop(config GameLoopConfig) (*GameLoop, error) {
 	}
 
 	gl := &GameLoop{
-		l:              logger,
+		logger:         logger,
 		rw:             sync.RWMutex{},
 		ticketCount:    0,
 		ticketDuration: config.TicketDuration,
@@ -100,9 +100,9 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 	for i := range gl.goRoutineCount {
 		gl.wgWorkers.Add(1)
 		go func() {
-			gl.l.Info("worker started", zap.Int("id", i))
+			gl.logger.Info("worker started", zap.Int("id", i))
 			defer func() {
-				gl.l.Info("worker stopped", zap.Int("id", i))
+				gl.logger.Info("worker stopped", zap.Int("id", i))
 				gl.wgWorkers.Done()
 			}()
 
@@ -136,7 +136,11 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 			loopEvents(ctx, gl, workerChannel)
 
-			gl.l.Info("Tick duration", zap.Duration("duration", time.Since(start)))
+			gl.logger.Info(
+				"Tick duration",
+				zap.Uint64("ticket", gl.ticketCount),
+				zap.Duration("duration", time.Since(start)),
+			)
 
 			gl.lastTicketTime = time.Now()
 		}
@@ -173,16 +177,20 @@ func loopEvents(ctx context.Context, gl *GameLoop, workerChannel chan func(conte
 					Ticket: gl.ticketCount,
 				}
 
-				event.OnTick(ctx, onTick, gl.state)
+				event.OnTick(ctx, onTick)
 			}
 		}
 	}
 }
 
 func (gl *GameLoop) Close(ctx context.Context) error {
-	err := gl.l.Sync()
+	err := gl.logger.Sync()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (gl *GameLoop) Logger() *zap.Logger {
+	return gl.logger
 }

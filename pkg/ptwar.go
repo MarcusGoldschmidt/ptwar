@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"ptwar/pkg/ptwarloop"
+	"ptwar/pkg/world"
 	"runtime"
 	"time"
 )
@@ -17,6 +18,10 @@ func MakeDefaultServer(ctx context.Context) (*ptwarloop.GameLoop, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	state := world.NewState(gameLoop.Logger())
+
+	gameLoop.AddSystems(ctx, state)
 
 	return gameLoop, nil
 }

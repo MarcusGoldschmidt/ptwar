@@ -2,7 +2,11 @@ package main
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"os"
+	"os/signal"
 	"ptwar/pkg"
+	"time"
 )
 
 func main() {
@@ -15,5 +19,23 @@ func main() {
 
 	defer server.Close(ctx)
 
-	server.Loop(ctx)
+	go func() {
+		server.Loop(ctx)
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, time.Second*30)
+	defer cancel()
+
+	err = server.Stop(ctx)
+	if err != nil {
+		server.Logger().Error("error stopping server", zap.Error(err))
+		os.Exit(1)
+	}
+
+	os.Exit(0)
 }
