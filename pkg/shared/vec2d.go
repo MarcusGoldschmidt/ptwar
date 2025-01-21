@@ -7,6 +7,10 @@ type Vec2D struct {
 	Y float64
 }
 
+func NewVec2D(x, y float64) Vec2D {
+	return Vec2D{X: x, Y: y}
+}
+
 func (p Vec2D) Add(other Vec2D) Vec2D {
 	return Vec2D{X: p.X + other.X, Y: p.Y + other.Y}
 }
