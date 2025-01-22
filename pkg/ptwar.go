@@ -2,8 +2,8 @@ package pkg
 
 import (
 	"context"
-	"ptwar/pkg/ptwarloop"
-	"ptwar/pkg/world"
+	"github.com/MarcusGoldschmidt/ptwar/pkg/ptwarloop"
+	"github.com/MarcusGoldschmidt/ptwar/pkg/world"
 	"runtime"
 	"time"
 )

@@ -2,7 +2,7 @@ package ptwarloop
 
 import (
 	"context"
-	"ptwar/pkg/system"
+	"github.com/MarcusGoldschmidt/ptwar/pkg/system"
 )
 
 func (gl *GameLoop) sendEvents(ctx context.Context, systems map[system.Order][]system.System) {

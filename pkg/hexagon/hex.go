@@ -6,8 +6,8 @@ package hexagon
 // https://www.redblobgames.com/grids/hexagons/
 
 import (
+	"github.com/MarcusGoldschmidt/ptwar/pkg/shared"
 	"math"
-	"ptwar/pkg/shared"
 )
 
 // Diagonal represents the direction of each point on a hex.

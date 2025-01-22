@@ -2,8 +2,8 @@ package world
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/ptwar/pkg/system"
 	"go.uber.org/zap"
-	"ptwar/pkg/system"
 	"sync"
 	"time"
 )

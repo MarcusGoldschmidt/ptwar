@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/ptwar/pkg"
 	"go.uber.org/zap"
 	"os"
 	"os/signal"
-	"ptwar/pkg"
 	"time"
 )
 

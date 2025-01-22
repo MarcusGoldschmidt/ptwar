@@ -3,9 +3,9 @@ package ptwarloop
 import (
 	"context"
 	"errors"
+	"github.com/MarcusGoldschmidt/ptwar/pkg/system"
+	"github.com/MarcusGoldschmidt/ptwar/pkg/world"
 	"go.uber.org/zap"
-	"ptwar/pkg/system"
-	"ptwar/pkg/world"
 	"sync"
 	"sync/atomic"
 	"time"
