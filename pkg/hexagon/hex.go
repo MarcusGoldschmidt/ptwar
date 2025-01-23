@@ -418,14 +418,14 @@ func (l Layout) RingFor(center Hex, rad float64) map[Hex]bool {
 		}
 
 		points := []shared.Vec2D{
-			{pxl.X + cp.X, pxl.Y + cp.Y},
-			{-pxl.X + cp.X, pxl.Y + cp.Y},
-			{pxl.X + cp.X, -pxl.Y + cp.Y},
-			{-pxl.X + cp.X, -pxl.Y + cp.Y},
-			{pxl.Y + cp.X, pxl.X + cp.Y},
-			{-pxl.Y + cp.X, pxl.X + cp.Y},
-			{pxl.Y + cp.X, -pxl.X + cp.Y},
-			{-pxl.Y + cp.X, -pxl.X + cp.Y},
+			{X: pxl.X + cp.X, Y: pxl.Y + cp.Y},
+			{X: -pxl.X + cp.X, Y: pxl.Y + cp.Y},
+			{X: pxl.X + cp.X, Y: -pxl.Y + cp.Y},
+			{X: -pxl.X + cp.X, Y: -pxl.Y + cp.Y},
+			{X: pxl.Y + cp.X, Y: pxl.X + cp.Y},
+			{X: -pxl.Y + cp.X, Y: pxl.X + cp.Y},
+			{X: pxl.Y + cp.X, Y: -pxl.X + cp.Y},
+			{X: -pxl.Y + cp.X, Y: -pxl.X + cp.Y},
 		}
 		for _, v := range points {
 			result[l.HexFor(v)] = true
@@ -439,7 +439,7 @@ func (l Layout) AreaFor(center Hex, rad float64) map[Hex]bool {
 	loop := l.RingFor(center, rad)
 	result := make(map[Hex]bool)
 	for k, v := range loop {
-		if v == true {
+		if v {
 			result[k] = true
 			for _, inside := range Line(k, center) {
 				result[inside] = true

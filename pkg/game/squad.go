@@ -2,7 +2,10 @@ package game
 
 import (
 	"context"
+	"math"
 )
+
+const WeightDecayFactor = 0.5
 
 type InstructionState int
 
@@ -48,6 +51,7 @@ type UnityStats struct {
 	// Building float32 stats
 	BuildSpeed float32
 }
+
 type SoldierModifier struct {
 	Id          uint64
 	Name        string
@@ -95,8 +99,11 @@ type Armor struct {
 }
 
 type Weapon struct {
-	Id         uint64
-	Name       string
+	Id   uint64
+	Name string
+
+	// Which ammo type it uses
+	AmmoData   *AmmoData
 	SoftAttack float32
 	HardAttack float32
 	Piercing   float32
@@ -112,14 +119,15 @@ type SpecialKit struct {
 }
 
 type Soldier struct {
-	Id      uint64
-	SquadId uint64
-	Name    string
-	Age     int8
-	MaxLife float32
-	Life    float32
-	Level   int8
-	Xp      float32
+	Id        uint64
+	SquadId   uint64
+	Name      string
+	Age       int8
+	MaxLife   float32
+	Life      float32
+	Level     int8
+	Xp        float32
+	MaxWeight float32
 
 	BaseAccuracy float32
 	BaseSpeed    float32
@@ -130,6 +138,8 @@ type Soldier struct {
 	Weapon      *Weapon
 	SpecialKit1 *SpecialKit
 	SpecialKit2 *SpecialKit
+
+	Ammo AmmoBag
 
 	// Stats
 	Stats UnityStats
@@ -144,7 +154,18 @@ func (s *Soldier) ApplyModifiers() {
 		Armor:      0,
 		Piercing:   0,
 		BuildSpeed: 0.5,
-		Weight:     1,
+		Weight:     0,
+	}
+
+	// TODO: Should level modifiers be applied here? Or after special Kits?
+	{
+		// Build speed
+		buildSpeedBonusPerLevel := (float32(s.Level - 1)) * 0.05
+		s.Stats.BuildSpeed = s.Stats.BuildSpeed + buildSpeedBonusPerLevel
+
+		// Speed
+		speedBonusPerLevel := (float32(s.Level - 1)) * 0.05
+		s.Stats.Speed = s.BaseSpeed + speedBonusPerLevel
 	}
 
 	if s.Helmet != nil {
@@ -177,6 +198,11 @@ func (s *Soldier) ApplyModifiers() {
 			modifier.Apply(s)
 		}
 	}
+
+	s.Stats.Weight += s.Ammo.TotalWeight()
+
+	// Exponential decrease speed based on weight
+	s.Stats.Speed = s.Stats.Speed * float32(math.Exp(float64(-WeightDecayFactor*(s.Stats.Weight/s.MaxWeight))))
 }
 
 type Squad struct {
@@ -227,4 +253,38 @@ func (s *Squad) MaxLife() float32 {
 
 func (s *Squad) Life() float32 {
 	return s.lifeCache
+}
+
+func (s *Squad) CalculateStats() {
+	stats := UnityStats{}
+
+	count := len(s.SoldiersById)
+
+	if count == 0 {
+		s.Stats = stats
+		return
+	}
+
+	for _, soldier := range s.SoldiersById {
+		soldier.ApplyModifiers()
+
+		stats.Speed += soldier.Stats.Speed
+		stats.SoftAttack += soldier.Stats.SoftAttack
+		stats.HardAttack += soldier.Stats.HardAttack
+		stats.Defense += soldier.Stats.Defense
+		stats.Armor += soldier.Stats.Armor
+		stats.Piercing += soldier.Stats.Piercing
+		stats.Weight += soldier.Stats.Weight
+		stats.BuildSpeed += soldier.Stats.BuildSpeed
+	}
+
+	// TODO: can use 20% of highest for each stats like HOI4
+	stats.Speed = stats.Speed / float32(count)
+	stats.SoftAttack = stats.SoftAttack / float32(count)
+	stats.HardAttack = stats.HardAttack / float32(count)
+	stats.Defense = stats.Defense / float32(count)
+	stats.Armor = stats.Armor / float32(count)
+	stats.Piercing = stats.Piercing / float32(count)
+	stats.Weight = stats.Weight / float32(count)
+	stats.BuildSpeed = stats.BuildSpeed / float32(count)
 }
