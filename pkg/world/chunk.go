@@ -6,12 +6,28 @@ import (
 )
 
 type Tile struct {
+	Position hexagon.Hex
 }
 
-func GenerateMap(hexagonRadius float64) *Tile {
+type RegionTile struct {
+	HexLayout hexagon.Layout
+	Tiles     map[hexagon.Hex]*Tile
+}
+
+func GenerateRegionTile(hexagonRadius float64) *RegionTile {
 	radius := shared.Vec2D{X: hexagonRadius, Y: hexagonRadius}
 
-	hexagon.MakeLayout(radius, shared.Vec2D{}, hexagon.OrientationFlat)
+	l := hexagon.MakeLayout(radius, shared.Vec2D{}, hexagon.OrientationFlat)
 
-	return &Tile{}
+	hexes := l.AllHex()
+
+	tiles := make(map[hexagon.Hex]*Tile)
+	for _, hex := range hexes {
+		tiles[hex] = &Tile{Position: hex}
+	}
+
+	return &RegionTile{
+		HexLayout: l,
+		Tiles:     tiles,
+	}
 }

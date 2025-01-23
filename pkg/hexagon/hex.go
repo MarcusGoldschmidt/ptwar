@@ -361,7 +361,10 @@ var (
 
 // Layout is the layout of the hex grid.
 type Layout struct {
-	Radius shared.Vec2D // Radius is the radius of the hexagon; supports stretching on X or Y.
+	Radius struct {
+		X float64
+		Y float64
+	} // Radius is the radius of the hexagon; supports stretching on X or Y.
 	Origin shared.Vec2D // Origin is the where the center of Hex{0, 0} will be displayed.
 	m      Orientation
 }
@@ -376,7 +379,7 @@ func MakeLayout(hexSize shared.Vec2D, originCenter shared.Vec2D, orientation Ori
 }
 
 // CenterFor returns the point at the center (as a float) of the hex based on the layout.
-func (l Layout) CenterFor(h Hex) shared.Vec2D {
+func (l *Layout) CenterFor(h Hex) shared.Vec2D {
 	q, r :=
 		float64(h.Q),
 		float64(h.R)
@@ -386,7 +389,7 @@ func (l Layout) CenterFor(h Hex) shared.Vec2D {
 }
 
 // HexFor for a hex.F that represents a point where things are laid out.
-func (l Layout) HexFor(f shared.Vec2D) Hex {
+func (l *Layout) HexFor(f shared.Vec2D) Hex {
 	x, y :=
 		f.X-l.Origin.X,
 		f.Y-l.Origin.Y
@@ -396,7 +399,7 @@ func (l Layout) HexFor(f shared.Vec2D) Hex {
 }
 
 // RingFor returns a set of hex within rad pixel distance of center.
-func (l Layout) RingFor(center Hex, rad float64) map[Hex]bool {
+func (l *Layout) RingFor(center Hex, rad float64) map[Hex]bool {
 	result := make(map[Hex]bool, 1)
 	if rad < l.Radius.X && rad < l.Radius.Y {
 		result[center] = true
@@ -435,7 +438,7 @@ func (l Layout) RingFor(center Hex, rad float64) map[Hex]bool {
 }
 
 // AreaFor returns all hex in the area of a screen circle.
-func (l Layout) AreaFor(center Hex, rad float64) map[Hex]bool {
+func (l *Layout) AreaFor(center Hex, rad float64) map[Hex]bool {
 	loop := l.RingFor(center, rad)
 	result := make(map[Hex]bool)
 	for k, v := range loop {
@@ -450,7 +453,7 @@ func (l Layout) AreaFor(center Hex, rad float64) map[Hex]bool {
 }
 
 // Vertices returns the location of all verticies for a given hexagon.
-func (l Layout) Vertices(h Hex) []shared.Vec2D {
+func (l *Layout) Vertices(h Hex) []shared.Vec2D {
 	result := make([]shared.Vec2D, 6, 7)
 	center := l.CenterFor(h)
 	for k := range result {
@@ -460,5 +463,22 @@ func (l Layout) Vertices(h Hex) []shared.Vec2D {
 		}
 	}
 	result = append(result, center)
+	return result
+}
+
+// AllHex returns all hexagons in the layout.
+func (l *Layout) AllHex() []Hex {
+	result := make([]Hex, 0)
+
+	radiusX := int(l.Radius.X)
+	radiusY := int(l.Radius.Y)
+
+	for q := -radiusX; q <= radiusX; q++ {
+		for r := -radiusY; r <= radiusY; r++ {
+			if q+r >= -radiusX && q+r <= radiusX {
+				result = append(result, Hex{q, r})
+			}
+		}
+	}
 	return result
 }

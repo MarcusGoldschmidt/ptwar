@@ -3,6 +3,7 @@ module github.com/MarcusGoldschmidt/ptwar
 go 1.23
 
 require (
+	github.com/ojrac/opensimplex-go v1.0.2
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
 )
