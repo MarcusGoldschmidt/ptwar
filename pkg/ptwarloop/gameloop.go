@@ -92,6 +92,8 @@ func (gl *GameLoop) Stop(ctx context.Context) error {
 func (gl *GameLoop) Loop(ctx context.Context) {
 	ctx, gl.cancel = context.WithCancel(ctx)
 
+	gl.logger.Info("Starting game loop")
+
 	gl.ticker = time.NewTicker(gl.ticketDuration)
 	defer gl.ticker.Stop()
 
@@ -136,11 +138,19 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 			loopEvents(ctx, gl, workerChannel)
 
-			gl.logger.Info(
-				"Tick duration",
-				zap.Uint64("ticket", gl.ticketCount),
-				zap.Duration("duration", time.Since(start)),
-			)
+			loopDuration := time.Since(start)
+
+			if loopDuration > gl.ticketDuration {
+				gl.logger.Warn("tick took too long", zap.Duration("loopDuration", loopDuration))
+			}
+
+			if gl.ticketCount%100 == 0 {
+				gl.logger.Info(
+					"Tick duration",
+					zap.Uint64("ticket", gl.ticketCount),
+					zap.Duration("duration", loopDuration),
+				)
+			}
 
 			gl.lastTicketTime = time.Now()
 		}

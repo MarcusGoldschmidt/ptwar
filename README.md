@@ -1,9 +1,32 @@
 # PTWAR
 
-Simple game loop engine, I would like to create a system for browser game like Ogame and Ikariam
+Persistent Ticket base War game
 
-Could be an Idle game or a real-time game
+## How to run
+
+```bash
+make run
+```
 
 ## TODO
 
 - [x] Create a simple game loop
+- [x] Soldier/Player bonuses system
+- [ ] Structure System, factory, mine, etc
+- [ ] Resource System
+- [ ] Battle System
+- [ ] Map System
+- [ ] Player System
+- [ ] Logistic System
+- [ ] Score System
+- [ ] Persistence
+- [ ] Procedural Map Generation
+- [ ] Render map for debug purpose
+- [ ] Websocket for real-time communication
+- [ ] Admin Api
+- [ ] Player Api
+- [ ] Auth System
+- [ ] Cluster to enable multiple servers
+- [ ] Dockerize
+- [ ] CI/CD
+- [ ] More configurations

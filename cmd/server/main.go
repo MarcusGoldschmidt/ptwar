@@ -14,14 +14,22 @@ func main() {
 
 	server, err := pkg.MakeDefaultServer(ctx)
 	if err != nil {
+		panic(err)
 		return
 	}
 
-	defer server.Close(ctx)
+	defer func(server *pkg.PtwarGameServer, ctx context.Context) {
+		err := server.Close(ctx)
+		if err != nil {
+			server.Logger().Error("error closing server", zap.Error(err))
+		}
+	}(server, ctx)
 
-	go func() {
-		server.Loop(ctx)
-	}()
+	err = server.Start(ctx)
+	if err != nil {
+		server.Logger().Error("error starting server", zap.Error(err))
+		return
+	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

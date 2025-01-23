@@ -14,3 +14,13 @@ func TestGenerateMap(t *testing.T) {
 
 	require.Equal(t, 7, len(region.Tiles))
 }
+
+func BenchmarkGenerateMap(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		region := GenerateRegionTile(1000)
+
+		require.NotNil(b, region)
+		require.NotNil(b, region.HexLayout)
+		require.NotNil(b, region.Tiles)
+	}
+}

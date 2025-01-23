@@ -25,3 +25,7 @@ lint:
 
 test:
 	go test -v ./...
+
+
+run:
+	$(GO) run -v -ldflags '$(V_LDFLAGS_COMMON)' ./cmd/server

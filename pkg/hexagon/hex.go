@@ -361,10 +361,7 @@ var (
 
 // Layout is the layout of the hex grid.
 type Layout struct {
-	Radius struct {
-		X float64
-		Y float64
-	} // Radius is the radius of the hexagon; supports stretching on X or Y.
+	Radius shared.Vec2D // Radius is the radius of the hexagon; supports stretching on X or Y.
 	Origin shared.Vec2D // Origin is the where the center of Hex{0, 0} will be displayed.
 	m      Orientation
 }
@@ -464,6 +461,27 @@ func (l *Layout) Vertices(h Hex) []shared.Vec2D {
 	}
 	result = append(result, center)
 	return result
+}
+
+func (l *Layout) Size() int {
+	// Spiral Ring
+	if l.Radius.Y == l.Radius.X {
+		return int(1 + 3*l.Radius.Y*(l.Radius.Y+1))
+	}
+
+	radiusX := int(l.Radius.X)
+	radiusY := int(l.Radius.Y)
+
+	sum := 0
+	for q := -radiusX; q <= radiusX; q++ {
+		for r := -radiusY; r <= radiusY; r++ {
+			if q+r >= -radiusX && q+r <= radiusX {
+				sum++
+			}
+		}
+	}
+
+	return sum
 }
 
 // AllHex returns all hexagons in the layout.
