@@ -29,7 +29,9 @@ go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/pool
 go.uber.org/zap/internal/stacktrace
+go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
+go.uber.org/zap/zaptest
 # gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 ## explicit; go 1.11
 # gopkg.in/yaml.v3 v3.0.1
