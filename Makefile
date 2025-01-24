@@ -12,20 +12,32 @@ V_LDFLAGS_COMMON := -s \
 					-X "github.com/MarcusGoldschmidt/ptwar/pkg.BuiltBy=${V_BUILT_BY}" \
 					-X "github.com/MarcusGoldschmidt/ptwar/pkg.BuiltAt=${V_BUILT_AT}"
 
-build:
+.PHONY: install-deps
+install-deps:
+	go install golang.org/x/tools/cmd/stringer@latest
+
+.PHONY: generate
+generate:
+	go generate ./...
+
+.PHONY: build
+build: generate
 	CGO_ENABLED=0 $(GO) build -v -ldflags '$(V_LDFLAGS_COMMON)' ./cmd/server
 
+.PHONY: update-deps
 update-deps:
-	go get -d -u ./...
+	go get -u ./...
 	go mod tidy -v
 	go mod vendor
 
+.PHONY: clean
 lint:
 	golangci-lint run
 
-test:
+.PHONY: test
+test: generate
 	go test -v ./...
 
-
-run:
+.PHONY: run
+run: generate
 	$(GO) run -v -ldflags '$(V_LDFLAGS_COMMON)' ./cmd/server

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"github.com/MarcusGoldschmidt/ptwar/pkg/ptwarloop"
 	"github.com/MarcusGoldschmidt/ptwar/pkg/world"
 	"go.uber.org/zap"
@@ -12,6 +13,7 @@ import (
 type PtwarGameServer struct {
 	logger   *zap.Logger
 	gameLoop *ptwarloop.GameLoop
+	cancel   context.CancelFunc
 }
 
 func MakeDefaultServer(ctx context.Context) (*PtwarGameServer, error) {
@@ -32,6 +34,7 @@ func MakeDefaultServer(ctx context.Context) (*PtwarGameServer, error) {
 	return &PtwarGameServer{
 		logger:   gameLoop.Logger(),
 		gameLoop: gameLoop,
+		cancel:   nil,
 	}, nil
 }
 
@@ -40,6 +43,7 @@ func (s *PtwarGameServer) Logger() *zap.Logger {
 }
 
 func (s *PtwarGameServer) Start(ctx context.Context) error {
+	ctx, s.cancel = context.WithCancel(ctx)
 
 	s.logger.Info("Starting server")
 	s.logger.Info("App version info", zap.Any("version", s.Version()))
@@ -52,6 +56,10 @@ func (s *PtwarGameServer) Start(ctx context.Context) error {
 }
 
 func (s *PtwarGameServer) Stop(ctx context.Context) error {
+	if s.cancel == nil {
+		return errors.New("server not started")
+	}
+
 	err := s.gameLoop.Stop(ctx)
 	if err != nil {
 		return err

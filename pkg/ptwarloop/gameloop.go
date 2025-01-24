@@ -99,6 +99,8 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 	workerChannel := make(chan func(ctx context.Context), gl.goRoutineCount)
 
+	gl.logger.Info("Starting workers", zap.Int("count", gl.goRoutineCount))
+
 	for i := range gl.goRoutineCount {
 		gl.wgWorkers.Add(1)
 		go func() {
@@ -111,6 +113,7 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 			for {
 				select {
 				case <-ctx.Done():
+					gl.logger.Info("worker stopping by context")
 					return
 				case work, ok := <-workerChannel:
 					if ok {
@@ -128,6 +131,7 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			gl.logger.Info("Stopping tick loop")
 			return
 		case <-gl.ticker.C:
 			gl.TickCount++
@@ -136,7 +140,7 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 			gl.sendEvents(ctx, gl.systems)
 
-			loopEvents(ctx, gl, workerChannel)
+			processTickEvents(ctx, gl, workerChannel)
 
 			loopDuration := time.Since(start)
 
@@ -157,13 +161,24 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 	}
 }
 
-func loopEvents(ctx context.Context, gl *GameLoop, workerChannel chan func(context.Context)) {
+func processTickEvents(ctx context.Context, gl *GameLoop, workerChannel chan func(context.Context)) {
 	runningEvents := int64(0)
 	for {
 		var event system.System
 
 		select {
 		case <-ctx.Done():
+			// TODO: should we wait for all events to finish?
+			//  or just stop the loop and let the context cancel the workers?
+			// Should we store the state?
+
+			gl.logger.Info("Stopping current tick processing events", zap.Uint64("Tick", gl.TickCount))
+
+			// Wait to finish all events
+			for atomic.LoadInt64(&runningEvents) > 0 {
+				time.Sleep(200 * time.Millisecond)
+			}
+
 			return
 		case event = <-gl.mapEventOrder[system.First]:
 		case event = <-gl.mapEventOrder[system.Second]:

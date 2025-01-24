@@ -7,6 +7,7 @@ import (
 	"math/rand"
 )
 
+//go:generate stringer -type=TerrainType
 type TerrainType int
 
 const (
