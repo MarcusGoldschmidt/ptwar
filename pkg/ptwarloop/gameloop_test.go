@@ -11,7 +11,7 @@ func TestShouldLoopThenStop(t *testing.T) {
 	ctx := context.Background()
 
 	config := GameLoopConfig{
-		TicketDuration: time.Millisecond,
+		TickDuration:   time.Millisecond,
 		EventsBuffer:   2,
 		GoRoutineCount: 2,
 	}
@@ -27,5 +27,5 @@ func TestShouldLoopThenStop(t *testing.T) {
 	err = gameLoop.Stop(ctx)
 	require.NoError(t, err)
 
-	require.NotZero(t, gameLoop.ticketCount, "ticketCount is 0")
+	require.NotZero(t, gameLoop.TickCount, "TickCount is 0")
 }

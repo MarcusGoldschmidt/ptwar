@@ -1,6 +1,6 @@
 # PTWAR
 
-Persistent Ticket base War game
+Persistent Tick base War game
 
 ## How to run
 

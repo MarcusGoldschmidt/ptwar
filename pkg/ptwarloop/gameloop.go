@@ -12,28 +12,28 @@ import (
 )
 
 type GameLoopConfig struct {
-	TicketDuration time.Duration
+	TickDuration   time.Duration
 	EventsBuffer   uint
 	GoRoutineCount int
 }
 
 type GameLoop struct {
-	logger         *zap.Logger
-	rw             sync.RWMutex
-	ticketCount    uint64
-	ticketDuration time.Duration
-	mapEventOrder  map[system.Order]chan system.System
-	setupEvents    map[system.Order][]system.System
-	systems        map[system.Order][]system.System
+	logger        *zap.Logger
+	rw            sync.RWMutex
+	TickCount     uint64
+	TickDuration  time.Duration
+	mapEventOrder map[system.Order]chan system.System
+	setupEvents   map[system.Order][]system.System
+	systems       map[system.Order][]system.System
 
 	// Config
 	goRoutineCount int
 
 	// Runtime
-	lastTicketTime time.Time
-	ticker         *time.Ticker
-	cancel         context.CancelFunc
-	wgWorkers      sync.WaitGroup
+	lastTickTime time.Time
+	ticker       *time.Ticker
+	cancel       context.CancelFunc
+	wgWorkers    sync.WaitGroup
 
 	// World
 	state *world.State
@@ -48,8 +48,8 @@ func NewGameLoop(config GameLoopConfig) (*GameLoop, error) {
 		return nil, errors.New("invalid eventsBuffer")
 	}
 
-	if config.TicketDuration <= 0 {
-		return nil, errors.New("invalid ticketDuration")
+	if config.TickDuration <= 0 {
+		return nil, errors.New("invalid TickDuration")
 	}
 
 	logger, err := zap.NewProduction()
@@ -60,15 +60,15 @@ func NewGameLoop(config GameLoopConfig) (*GameLoop, error) {
 	gl := &GameLoop{
 		logger:         logger,
 		rw:             sync.RWMutex{},
-		ticketCount:    0,
-		ticketDuration: config.TicketDuration,
+		TickCount:      0,
+		TickDuration:   config.TickDuration,
 		mapEventOrder:  make(map[system.Order]chan system.System),
 		setupEvents:    make(map[system.Order][]system.System),
 		systems:        make(map[system.Order][]system.System),
 		goRoutineCount: config.GoRoutineCount,
 		wgWorkers:      sync.WaitGroup{},
 		state:          world.NewState(logger),
-		lastTicketTime: time.Now(),
+		lastTickTime:   time.Now(),
 	}
 
 	for i := system.First; i <= system.Last; i++ {
@@ -94,7 +94,7 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 	gl.logger.Info("Starting game loop")
 
-	gl.ticker = time.NewTicker(gl.ticketDuration)
+	gl.ticker = time.NewTicker(gl.TickDuration)
 	defer gl.ticker.Stop()
 
 	workerChannel := make(chan func(ctx context.Context), gl.goRoutineCount)
@@ -123,14 +123,14 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 	gl.sendEvents(ctx, gl.setupEvents)
 
-	gl.lastTicketTime = time.Now()
+	gl.lastTickTime = time.Now()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-gl.ticker.C:
-			gl.ticketCount++
+			gl.TickCount++
 
 			start := time.Now()
 
@@ -140,19 +140,19 @@ func (gl *GameLoop) Loop(ctx context.Context) {
 
 			loopDuration := time.Since(start)
 
-			if loopDuration > gl.ticketDuration {
+			if loopDuration > gl.TickDuration {
 				gl.logger.Warn("tick took too long", zap.Duration("loopDuration", loopDuration))
 			}
 
-			if gl.ticketCount%100 == 0 {
+			if gl.TickCount%100 == 0 {
 				gl.logger.Info(
 					"Tick duration",
-					zap.Uint64("ticket", gl.ticketCount),
+					zap.Uint64("Tick", gl.TickCount),
 					zap.Duration("duration", loopDuration),
 				)
 			}
 
-			gl.lastTicketTime = time.Now()
+			gl.lastTickTime = time.Now()
 		}
 	}
 }
@@ -183,8 +183,8 @@ func loopEvents(ctx context.Context, gl *GameLoop, workerChannel chan func(conte
 				defer atomic.AddInt64(&runningEvents, -1)
 
 				onTick := system.TickMessage{
-					Delta:  time.Since(gl.lastTicketTime),
-					Ticket: gl.ticketCount,
+					Delta: time.Since(gl.lastTickTime),
+					Tick:  gl.TickCount,
 				}
 
 				event.OnTick(ctx, onTick)

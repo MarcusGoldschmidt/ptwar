@@ -16,7 +16,7 @@ type PtwarGameServer struct {
 
 func MakeDefaultServer(ctx context.Context) (*PtwarGameServer, error) {
 	config := ptwarloop.GameLoopConfig{
-		TicketDuration: time.Millisecond * 100,
+		TickDuration:   time.Millisecond * 100,
 		EventsBuffer:   1024,
 		GoRoutineCount: runtime.NumCPU(),
 	}

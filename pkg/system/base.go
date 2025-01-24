@@ -16,8 +16,8 @@ const (
 )
 
 type TickMessage struct {
-	Ticket uint64
-	Delta  time.Duration
+	Tick  uint64
+	Delta time.Duration
 }
 
 type System interface {
