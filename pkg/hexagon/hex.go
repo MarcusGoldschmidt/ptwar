@@ -66,6 +66,12 @@ func (h Hex) Float() (float64, float64, float64) {
 	return float64(h.Q), float64(-h.Q - h.R), float64(h.R)
 }
 
+func (h Hex) MapToPixel(size int) (float64, float64) {
+	x := float64(size) * (3.0 / 2.0 * float64(h.Q))
+	y := float64(size) * (math.Sqrt(3.0)/2.0*float64(h.Q) + math.Sqrt(3.0)*float64(h.R))
+	return x, y
+}
+
 // Delta is the amount of change between two hexagons.
 type Delta struct {
 	Q, R, S int

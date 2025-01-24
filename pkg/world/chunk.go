@@ -60,13 +60,13 @@ type RegionTile struct {
 	Tiles     map[hexagon.Hex]*Tile
 }
 
-func GenerateRegionTile(hexagonRadius float64) *RegionTile {
+func GenerateRegionTile(hexagonRadius int) *RegionTile {
 	noiseMap := procedural.PerlinNoise(procedural.NoiseOptions{
 		Seed:  rand.Int63(),
 		Scale: 1,
 	})
 
-	radius := shared.Vec2D{X: hexagonRadius, Y: hexagonRadius}
+	radius := shared.Vec2D{X: float64(hexagonRadius), Y: float64(hexagonRadius)}
 
 	l := hexagon.MakeLayout(radius, shared.Vec2D{}, hexagon.OrientationFlat)
 
