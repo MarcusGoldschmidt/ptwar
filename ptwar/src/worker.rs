@@ -66,15 +66,19 @@ impl PWorkerManager {
         let idx = self.idx;
         self.idx = (self.idx + 1) % self.workers_count;
 
-        let mut in_flight = self.messages_in_flight.lock().await;
-        *in_flight += 1;
+        {
+            let mut in_flight = self.messages_in_flight.lock().await;
+            *in_flight += 1;
+        }
 
         self.workers_tx[idx].send(handler).await.unwrap();
     }
 
     pub async fn send_batch(&mut self, handlers: &Vec<WorkerJob>) {
-        let mut in_flight = self.messages_in_flight.lock().await;
-        *in_flight += handlers.len();
+        {
+            let mut in_flight = self.messages_in_flight.lock().await;
+            *in_flight += handlers.len();
+        }
 
         let worker_count = self.workers_count;
 

@@ -1,10 +1,10 @@
 use std::iter::Sum;
 use std::ops::Add;
 
-mod ammo;
-mod soldier;
-mod squad;
-mod resource;
+pub mod ammo;
+pub mod resource;
+pub mod soldier;
+pub mod squad;
 
 pub type GameId = u64;
 

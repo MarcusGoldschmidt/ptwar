@@ -1,3 +1,4 @@
+use crate::common::Static;
 use derivative::Derivative;
 use std::collections::HashMap;
 
@@ -25,12 +26,12 @@ pub struct AmmoMagDescriptor {
 }
 
 pub struct AmmoMag {
-    descriptor: &'static AmmoMagDescriptor,
+    descriptor: Static<AmmoMagDescriptor>,
     count: u16,
 }
 
-impl From<&'static AmmoMagDescriptor> for AmmoMag {
-    fn from(value: &'static AmmoMagDescriptor) -> Self {
+impl From<Static<AmmoMagDescriptor>> for AmmoMag {
+    fn from(value: Static<AmmoMagDescriptor>) -> Self {
         Self {
             descriptor: value,
             count: value.max_count,
@@ -39,7 +40,7 @@ impl From<&'static AmmoMagDescriptor> for AmmoMag {
 }
 
 pub struct AmmoBag {
-    inner: HashMap<&'static AmmoMagDescriptor, Vec<AmmoMag>>,
+    inner: HashMap<Static<AmmoMagDescriptor>, Vec<AmmoMag>>,
 }
 
 impl Default for AmmoBag {
@@ -60,14 +61,14 @@ impl AmmoBag {
         }
     }
 
-    pub fn get(&mut self, descriptor: &'static AmmoMagDescriptor) -> Option<AmmoMag> {
-        let entry = self.inner.get_mut(descriptor)?;
+    pub fn get(&mut self, descriptor: Static<AmmoMagDescriptor>) -> Option<AmmoMag> {
+        let entry = self.inner.get_mut(&descriptor)?;
         entry.pop()
     }
 
-    pub fn count(&self, descriptor: &'static AmmoMagDescriptor) -> u16 {
+    pub fn count(&self, descriptor: Static<AmmoMagDescriptor>) -> u16 {
         self.inner
-            .get(descriptor)
+            .get(&descriptor)
             .map_or(0, |v| v.iter().map(|i| i.count).sum())
     }
 

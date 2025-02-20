@@ -36,7 +36,7 @@ impl PtWarServer {
         Self {
             tick: Arc::new(RwLock::new(0)),
             events_queue: Default::default(),
-            world: Arc::new(RwLock::new(World { last_save: None })),
+            world: Arc::new(RwLock::new(World::from_seed(0)),),
             stats: Default::default(),
         }
     }
