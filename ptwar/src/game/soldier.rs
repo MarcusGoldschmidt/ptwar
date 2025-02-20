@@ -45,7 +45,7 @@ impl SoldierModifier {
         match self {
             SoldierModifier::Accuracy(value) => soldier.stats.soft_attack *= value,
             SoldierModifier::Speed(value) => soldier.stats.speed *= value,
-            SoldierModifier::Health(value) => soldier.max_hp *= (*value as u16),
+            SoldierModifier::Health(value) => soldier.max_hp *= *value as u16,
             SoldierModifier::Weight(value) => soldier.stats.weight *= value,
         }
     }

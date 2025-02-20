@@ -22,7 +22,7 @@ impl Squad {
             return;
         }
 
-        for (_id, mut soldier) in self.soldiers.iter_mut() {
+        for (_id, soldier) in self.soldiers.iter_mut() {
             soldier.calculate_stats();
 
             stats.add(soldier.stats());

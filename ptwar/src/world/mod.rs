@@ -3,13 +3,11 @@ mod tile;
 
 use crate::system::Tick;
 use crate::world::region::{Region, RegionNoise};
-use crate::world::tile::Tile;
 use hexx::{shapes, Hex, HexLayout, HexOrientation, Vec2};
 use log::info;
 use noise::{Fbm, NoiseFn, Perlin};
 use rayon::prelude::*;
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::time::Instant;
 
 pub struct World {

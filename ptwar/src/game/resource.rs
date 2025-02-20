@@ -1,6 +1,6 @@
 use crate::common::Static;
 use crate::game::GameId;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 #[derive(Eq, PartialEq, Hash)]
 pub enum RawResource {
@@ -120,7 +120,7 @@ impl ResourceStorage {
             self.resources
                 .entry(update.resource)
                 .and_modify(|v| {
-                    if ((0..100).contains(&update.amount)) {
+                    if (0..100).contains(&update.amount) {
                         v.amount += v.amount * (update.amount / 100);
 
                         if v.amount > v.max {

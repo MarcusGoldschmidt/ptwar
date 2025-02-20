@@ -58,7 +58,7 @@ impl PtWarServer {
 
     // TODO: implement save method
     pub async fn save(&self) {
-        let mut world = self.world.write().await;
+        let world = self.world.write().await;
 
         self.stats.write().await.last_save = Some((self.tick().await, Instant::now()));
     }

@@ -3,7 +3,7 @@ use crate::system::{PtWarServer, Tick};
 use async_trait::async_trait;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use log::{info, warn};
+use log::warn;
 use std::sync::Arc;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::{Mutex, RwLock};
