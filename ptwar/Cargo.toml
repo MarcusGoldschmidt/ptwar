@@ -1,0 +1,14 @@
+[package]
+name = "ptwar"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ptwar-macros = { path = "../ptwar-macros" }
+env_logger = "0.11.6"
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1.86"
+log = "0.4.25"
+futures = "0.3.31"
+derivative = "2.2.0"
+num_cpus = "1.16.0"

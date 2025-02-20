@@ -1,0 +1,10 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+
+.idea
+
+*.log
+
+debug/
+target/

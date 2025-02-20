@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = ["ptwar-macros",
+    "ptwar-server",
+    "ptwar-macros",
+    "ptwar",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[profile.bench]
+debug = true
+
+[profile.profiling]
+inherits = "release"
+debug = true
+
+[workspace.dependencies]
+log = "0.4.25"
+tokio = { version = "1.43", features = ["full"] }
+rayon = "1.10"
+uuid = { version = "1.13", features = ["serde", "v3", "v4"] }
+derive_more = { version = "2.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+quote = "1.0.38"
+
+async-trait = "0.1"
