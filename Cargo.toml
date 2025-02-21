@@ -3,7 +3,7 @@ resolver = "2"
 members = ["ptwar-macros",
     "ptwar-server",
     "ptwar-macros",
-    "ptwar",
+    "ptwar", "ptwar-ui",
 ]
 
 [workspace.package]
@@ -35,4 +35,4 @@ serde_json = "1.0"
 quote = "1.0.38"
 async-trait = "0.1"
 noise = "0.9"
-
+sysinfo = "0.33.1"

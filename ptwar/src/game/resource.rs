@@ -1,6 +1,6 @@
 use crate::common::Static;
 use crate::game::GameId;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Eq, PartialEq, Hash)]
 pub enum RawResource {
@@ -54,69 +54,72 @@ pub struct ResourceUpdate {
     amount: u32,
 }
 
+pub enum StorageUpdateStats {
+    Add(ResourceUpdate),
+    Sub(ResourceUpdate),
+    Percent(ResourceUpdate),
+}
+
+// TODO: Implement a proper storage system with better memory usage.
 pub struct ResourceStorage {
     resources: HashMap<Static<Resource>, ResourceCount>,
-
-    updates_tick: HashMap<GameId, ResourceUpdate>,
-    updates_storage: HashMap<GameId, ResourceUpdate>,
-    updates_percent: HashMap<GameId, ResourceUpdate>,
+    updates: BTreeMap<GameId, StorageUpdateStats>,
 }
 
 impl Default for ResourceStorage {
     fn default() -> Self {
         Self {
             resources: Default::default(),
-            updates_tick: Default::default(),
-            updates_storage: Default::default(),
-            updates_percent: Default::default(),
+            updates: Default::default(),
         }
     }
 }
 
 impl ResourceStorage {
-    pub fn add_update_storage(&mut self, storage: ResourceUpdate) {
-        let resource = storage.resource;
-        let amount = storage.amount;
+    pub fn add_update_storage(&mut self, id: GameId, storage: StorageUpdateStats) {
+        self.updates.insert(id, storage);
 
-        self.updates_storage.insert(storage.id, storage);
-
-        self.resources
-            .entry(resource)
-            .and_modify(|v| {
-                v.max += amount;
-            })
-            .or_insert(ResourceCount::from(resource));
-    }
-
-    pub fn add_update_tick(&mut self, tick: ResourceUpdate) {
-        self.updates_tick.insert(tick.id, tick);
+        self.tick();
     }
 
     pub fn remove(&mut self, id: GameId) {
-        self.updates_tick.remove(&id);
-        self.updates_percent.remove(&id);
-
-        self.updates_storage.remove(&id).map(|v| {
-            self.resources.entry(v.resource).and_modify(|v| {
-                v.amount -= v.amount;
-            });
-        });
+        self.updates.remove(&id);
     }
 
     pub fn tick(&mut self) {
-        for (_id, update) in self.updates_tick.iter() {
-            self.resources
-                .entry(update.resource)
-                .and_modify(|v| {
-                    v.amount += update.amount;
-                    if v.amount > v.max {
-                        v.amount = v.max;
-                    }
-                })
-                .or_insert(ResourceCount::from(update.resource));
+        let mut percent = Vec::new();
+
+        for (_id, update) in self.updates.iter() {
+            match update {
+                StorageUpdateStats::Add(res) => {
+                    self.resources
+                        .entry(res.resource)
+                        .and_modify(|v| {
+                            v.amount += res.amount;
+                            if v.amount > v.max {
+                                v.amount = v.max;
+                            }
+                        })
+                        .or_insert(ResourceCount::from(res.resource));
+                }
+                StorageUpdateStats::Sub(res) => {
+                    self.resources
+                        .entry(res.resource)
+                        .and_modify(|v| {
+                            v.amount -= res.amount;
+                            if v.amount > v.max {
+                                v.amount = v.max;
+                            }
+                        })
+                        .or_insert(ResourceCount::from(res.resource));
+                }
+                StorageUpdateStats::Percent(res) => {
+                    percent.push(res);
+                }
+            }
         }
 
-        for (_id, update) in self.updates_percent.iter() {
+        for update in percent {
             self.resources
                 .entry(update.resource)
                 .and_modify(|v| {

@@ -1,4 +1,3 @@
-use crate::game::resource::ResourceStorage;
 use hexx::Hex;
 
 pub enum Biome {
@@ -17,8 +16,10 @@ pub enum Biome {
 pub struct Tile {
     pub hex: Hex,
     pub biome: Biome,
-    pub infrastructure_level: u32,
-    pub resource_storage: ResourceStorage,
+    pub infrastructure_level: u8,
+    pub wight: u8,
+    pub slots: u8,
+    pub noise: f64,
 }
 
 impl Tile {
@@ -31,7 +32,9 @@ impl Tile {
             hex,
             biome,
             infrastructure_level: 0,
-            resource_storage: Default::default(),
+            wight: 100,
+            slots: 3,
+            noise,
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::event::Event;
 use crate::system::SOrder::{First, Second};
 use crate::worker::{PWorkerManager, TickHandler, WorkerJob};
-use crate::world::World;
+use crate::world::PtWorld;
 use log::{info, warn};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -27,7 +27,7 @@ impl Default for ServerStats {
 pub struct PtWarServer {
     pub tick: Arc<RwLock<Tick>>,
     pub events_queue: Arc<Mutex<Vec<Box<dyn Event>>>>,
-    pub world: Arc<RwLock<World>>,
+    pub world: Arc<RwLock<PtWorld>>,
     pub stats: Arc<RwLock<ServerStats>>,
 }
 
@@ -36,7 +36,7 @@ impl PtWarServer {
         Self {
             tick: Arc::new(RwLock::new(0)),
             events_queue: Default::default(),
-            world: Arc::new(RwLock::new(World::from_seed(0)),),
+            world: Arc::new(RwLock::new(PtWorld::from_seed(0)),),
             stats: Default::default(),
         }
     }

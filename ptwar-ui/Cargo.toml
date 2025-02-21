@@ -1,0 +1,11 @@
+[package]
+name = "ptwar-ui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy = "0.15.2"
+time = "0.3.37"
+hexx = "0.20.0"
+ptwar = { path = "../ptwar" }
+rand = "0.9.0"

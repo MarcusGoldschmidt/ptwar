@@ -1,13 +1,16 @@
-mod common;
-mod core;
-mod event;
-mod events;
-mod game;
-mod system;
-mod worker;
-mod world;
+pub mod common;
+pub mod core;
+pub mod event;
+pub mod events;
+pub mod game;
+pub mod system;
+pub mod worker;
+pub mod world;
 
 use crate::system::{GameLoop, TPS};
+use log::info;
+
+use sysinfo::System;
 
 pub const DEFAULT_TPS: TPS = 60;
 
@@ -25,6 +28,20 @@ impl PTWar {
     }
 
     pub async fn start(&mut self) {
+        let mut sys = System::new_all();
+
+        // First we update all information of our `System` struct.
+        sys.refresh_all();
+
+        let memory = sysinfo::get_current_pid()
+            .ok()
+            .and_then(|pid| sys.process(pid))
+            .map(|process| process.memory());
+
+        if let Some(memory) = memory {
+            info!("memory usage before start: {}Mb", memory / (1024 * 1024));
+        }
+
         self.gloop.start().await;
     }
 }

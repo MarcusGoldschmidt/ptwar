@@ -1,3 +1,4 @@
+use crate::game::resource::ResourceStorage;
 use crate::world::tile::Tile;
 use hexx::{shapes, Hex, HexLayout, HexOrientation, Vec2};
 use noise::{Fbm, NoiseFn, Perlin};
@@ -12,9 +13,10 @@ pub struct RegionNoise {
 
 pub struct Region {
     pub name: String,
-    pub hex_layout: HexLayout,
-    pub tiles: HashMap<Hex, Tile>,
     pub region_noise: RegionNoise,
+    pub tiles: HashMap<Hex, Tile>,
+    // TODO: high memory usage, consider using a sparse data structure.
+    pub storage: HashMap<Hex, ResourceStorage>,
 }
 
 impl Region {
@@ -37,6 +39,7 @@ impl Region {
         };
 
         let mut tiles = HashMap::new();
+        let mut storage = HashMap::new();
 
         let noise_function = Fbm::<Perlin>::new(region_noise.seed);
 
@@ -44,13 +47,14 @@ impl Region {
             let noise = noise_function.get([hex.x as f64, hex.y as f64, region_noise.region_noise]);
 
             tiles.insert(hex, Tile::from_noise(hex, noise));
+            storage.insert(hex, ResourceStorage::default());
         }
 
         Self {
             name: Self::random_name(),
-            hex_layout: layout,
             tiles,
             region_noise,
+            storage,
         }
     }
 }

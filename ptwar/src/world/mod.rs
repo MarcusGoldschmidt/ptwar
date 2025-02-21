@@ -1,5 +1,5 @@
-mod region;
-mod tile;
+pub mod region;
+pub mod tile;
 
 use crate::system::Tick;
 use crate::world::region::{Region, RegionNoise};
@@ -10,29 +10,21 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::time::Instant;
 
-pub struct World {
+pub struct PtWorld {
     pub last_save: Option<(Tick, Instant)>,
-
-    hex_layout: HexLayout,
-    regions: HashMap<Hex, Region>,
-    seed: u32,
+    pub regions: HashMap<Hex, Region>,
+    pub seed: u32,
 }
 
 const DEFAULT_REGION_RADIUS: u32 = 30;
 
-impl World {
+impl PtWorld {
     pub fn from_seed(seed: u32) -> Self {
-        let layout = HexLayout {
-            scale: Vec2::new(10.0, 5.0),
-            orientation: HexOrientation::Flat,
-            ..Default::default()
-        };
-
         let noise_function = Fbm::<Perlin>::new(seed);
 
         let start = Instant::now();
 
-        let regions: HashMap<Hex, Region> = shapes::rombus(Hex::from(layout.origin), 3, 6)
+        let regions: HashMap<Hex, Region> = shapes::hexagon(Hex::ZERO, 2)
             .collect::<Vec<Hex>>()
             .par_iter()
             .map(|hex| {
@@ -56,14 +48,15 @@ impl World {
             .sum::<usize>();
 
         info!(
-            "World generation took: {}ms generated {} tiles",
+            "World generation took: {}ms generated {} total tiles for {} regions with {} tiles each",
             start.elapsed().as_millis(),
-            tiles_count
+            tiles_count,
+            regions.len(),
+            tiles_count / regions.len()
         );
 
         Self {
             last_save: None,
-            hex_layout: layout,
             regions,
             seed,
         }
