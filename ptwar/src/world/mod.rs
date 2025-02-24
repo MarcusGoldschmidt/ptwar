@@ -1,4 +1,5 @@
 pub mod region;
+mod region_noise;
 pub mod tile;
 
 use crate::system::Tick;
@@ -16,7 +17,7 @@ pub struct PtWorld {
     pub seed: u32,
 }
 
-const DEFAULT_REGION_RADIUS: u32 = 30;
+const DEFAULT_REGION_RADIUS: u32 = 40;
 
 impl PtWorld {
     pub fn from_seed(seed: u32) -> Self {
@@ -35,6 +36,7 @@ impl PtWorld {
                     RegionNoise {
                         seed,
                         region_noise: noise,
+                        hex: *hex,
                     },
                 );
 

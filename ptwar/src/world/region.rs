@@ -1,7 +1,8 @@
 use crate::game::resource::ResourceStorage;
+use crate::world::region_noise::make_noise_fun;
 use crate::world::tile::Tile;
 use hexx::{shapes, Hex, HexLayout, HexOrientation, Vec2};
-use noise::{Fbm, NoiseFn, Perlin};
+use noise::{Fbm, MultiFractal, NoiseFn, Perlin, Turbulence, Worley};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use std::collections::HashMap;
@@ -9,6 +10,7 @@ use std::collections::HashMap;
 pub struct RegionNoise {
     pub(crate) seed: u32,
     pub(crate) region_noise: f64,
+    pub(crate) hex: Hex,
 }
 
 pub struct Region {
@@ -41,10 +43,15 @@ impl Region {
         let mut tiles = HashMap::new();
         let mut storage = HashMap::new();
 
-        let noise_function = Fbm::<Perlin>::new(region_noise.seed);
+        let noise_function = make_noise_fun(region_noise.seed);
 
         for hex in shapes::hexagon(Hex::from(layout.origin), radius) {
-            let noise = noise_function.get([hex.x as f64, hex.y as f64, region_noise.region_noise]);
+            let noise = noise_function.get([
+                hex.x as f64,
+                hex.y as f64,
+                region_noise.hex.x as f64,
+                region_noise.hex.y as f64,
+            ]);
 
             tiles.insert(hex, Tile::from_noise(hex, noise));
             storage.insert(hex, ResourceStorage::default());
