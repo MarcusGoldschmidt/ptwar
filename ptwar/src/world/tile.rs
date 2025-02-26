@@ -1,5 +1,7 @@
+use crate::world::region_noise::MultiLayerNoiseValue;
 use hexx::Hex;
 
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Biome {
     Water,
     Desert,
@@ -9,6 +11,39 @@ pub enum Biome {
     Hill,
     Mountain,
     City,
+    CityCenter,
+    Road,
+}
+
+impl Biome {
+    pub fn move_cost(&self) -> Option<u32> {
+        match self {
+            Biome::Water => Some(20),
+            Biome::Desert => Some(7),
+            Biome::Plains => Some(5),
+            Biome::Forest => Some(10),
+            Biome::DenseForest => Some(14),
+            Biome::Hill => Some(10),
+            Biome::Mountain => Some(17),
+            Biome::City => Some(10),
+            Biome::CityCenter => Some(10),
+            Biome::Road => Some(2),
+        }
+    }
+    pub fn all() -> Vec<Biome> {
+        vec![
+            Biome::Water,
+            Biome::Desert,
+            Biome::Plains,
+            Biome::Forest,
+            Biome::DenseForest,
+            Biome::Hill,
+            Biome::Mountain,
+            Biome::City,
+            Biome::Road,
+            Biome::CityCenter,
+        ]
+    }
 }
 
 pub struct Tile {
@@ -18,22 +53,12 @@ pub struct Tile {
     pub height: f64,
     pub wight: u8,
     pub slots: u8,
-    pub noise: f64,
+    pub noise: MultiLayerNoiseValue,
 }
 
 impl Tile {
-    pub fn from_noise(hex: Hex, noise: f64) -> Self {
-        let biome = match noise {
-            (-1.0..-0.2) => Biome::Water,
-            (0.0..0.2) => Biome::Plains,
-            (-0.2..0.0) => Biome::Desert,
-            (0.2..0.5) => Biome::Forest,
-            (0.5..0.6) => Biome::DenseForest,
-            (0.6..0.7) => Biome::Hill,
-            (0.7..0.8) => Biome::Mountain,
-            (0.8..1.0) => Biome::City,
-            _ => Biome::Water,
-        };
+    pub fn from_noise(hex: Hex, noise: MultiLayerNoiseValue) -> Self {
+        let biome = noise.gen_biome();
 
         Self {
             hex,

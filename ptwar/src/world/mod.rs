@@ -15,30 +15,22 @@ pub struct PtWorld {
     pub last_save: Option<(Tick, Instant)>,
     pub regions: HashMap<Hex, Region>,
     pub seed: u32,
+    pub region_radius: u32,
 }
 
-const DEFAULT_REGION_RADIUS: u32 = 40;
+const DEFAULT_REGION_RADIUS: u32 = 100;
 
 impl PtWorld {
     pub fn from_seed(seed: u32) -> Self {
-        let noise_function = Fbm::<Perlin>::new(seed);
+        let region_radius = DEFAULT_REGION_RADIUS;
 
         let start = Instant::now();
 
-        let regions: HashMap<Hex, Region> = shapes::hexagon(Hex::ZERO, 2)
+        let regions: HashMap<Hex, Region> = shapes::hexagon(Hex::ZERO, 1)
             .collect::<Vec<Hex>>()
             .par_iter()
             .map(|hex| {
-                let noise = noise_function.get([hex.x as f64, hex.y as f64]);
-
-                let region = Region::new_with_noise(
-                    DEFAULT_REGION_RADIUS,
-                    RegionNoise {
-                        seed,
-                        region_noise: noise,
-                        hex: *hex,
-                    },
-                );
+                let region = Region::new_with_noise(region_radius, RegionNoise { seed, hex: *hex });
 
                 (*hex, region)
             })
@@ -61,6 +53,7 @@ impl PtWorld {
             last_save: None,
             regions,
             seed,
+            region_radius,
         }
     }
 }

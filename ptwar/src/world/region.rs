@@ -1,24 +1,24 @@
 use crate::game::resource::ResourceStorage;
-use crate::world::region_noise::make_noise_fun;
-use crate::world::tile::Tile;
-use hexx::{shapes, Hex, HexLayout, HexOrientation, Vec2};
-use noise::{Fbm, MultiFractal, NoiseFn, Perlin, Turbulence, Worley};
+use crate::world::region_noise::NoiseGenerator;
+use crate::world::tile::{Biome, Tile};
+use hexx::algorithms::a_star;
+use hexx::storage::{HexStore, HexagonalMap};
+use hexx::{Hex, HexBounds};
+use log::info;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 pub struct RegionNoise {
     pub(crate) seed: u32,
-    pub(crate) region_noise: f64,
     pub(crate) hex: Hex,
 }
 
 pub struct Region {
     pub name: String,
     pub region_noise: RegionNoise,
-    pub tiles: HashMap<Hex, Tile>,
-    // TODO: high memory usage, consider using a sparse data structure.
-    pub storage: HashMap<Hex, ResourceStorage>,
+    pub tiles: HexagonalMap<(Tile, ResourceStorage)>,
+    pub cities: Vec<HexBounds>,
 }
 
 impl Region {
@@ -34,34 +34,148 @@ impl Region {
     }
 
     pub fn new_with_noise(radius: u32, region_noise: RegionNoise) -> Self {
-        let layout = HexLayout {
-            scale: Vec2::new(radius as f32, radius as f32),
-            orientation: HexOrientation::Flat,
-            ..Default::default()
-        };
+        let noise_function = NoiseGenerator::new(region_noise.seed);
 
-        let mut tiles = HashMap::new();
-        let mut storage = HashMap::new();
-
-        let noise_function = make_noise_fun(region_noise.seed);
-
-        for hex in shapes::hexagon(Hex::from(layout.origin), radius) {
-            let noise = noise_function.get([
+        let mut hex_map = HexagonalMap::new(Hex::ZERO, radius, |hex| {
+            let noise = noise_function.generate(
                 hex.x as f64,
                 hex.y as f64,
                 region_noise.hex.x as f64,
                 region_noise.hex.y as f64,
-            ]);
+            );
 
-            tiles.insert(hex, Tile::from_noise(hex, noise));
-            storage.insert(hex, ResourceStorage::default());
+            (Tile::from_noise(hex, noise), ResourceStorage::default())
+        });
+
+        let mut cities = Self::find_city_clusters(&hex_map);
+
+        cities.sort_by(|a, b| a.radius.cmp(&b.radius));
+
+        let mut have_road = HashSet::new();
+
+        // Create roads between cities.
+        for current_city in cities.iter() {
+            // Mark as center
+            // Debugging
+            for x in current_city.all_coords() {
+                if let Some((tile, _)) = hex_map.get_mut(x) {
+                    tile.biome = Biome::CityCenter;
+                }
+            }
+
+            let mut near_cities = cities
+                .iter()
+                .map(|c| (c, c.center.distance_to(current_city.center)))
+                .collect::<Vec<_>>();
+
+            near_cities.sort_by(|a, b| a.1.cmp(&b.1));
+            near_cities.reverse();
+
+            for target_city in near_cities.iter() {
+                if current_city == target_city.0 {
+                    continue;
+                }
+
+                if have_road.contains(&(current_city.center, target_city.0.center))
+                    || have_road.contains(&(target_city.0.center, current_city.center))
+                {
+                    continue;
+                }
+
+                let path = a_star(current_city.center, target_city.0.center, |a, b| {
+                    let tile_a = hex_map.get(a).map(|(t, _)| t)?;
+                    let tile_b = hex_map.get(b).map(|(t, _)| t)?;
+
+                    let height_diff = match tile_b.biome {
+                        Biome::Water => 0.0,
+                        _ => (tile_a.height - tile_b.height).abs() * 5.0,
+                    };
+
+                    let biome_b = hex_map.get(b).map(|(t, _)| t.biome).unwrap_or(Biome::City);
+
+                    biome_b.move_cost().map(|cost| cost + height_diff as u32)
+                });
+
+                have_road.insert((current_city.center, target_city.0.center));
+
+                if let Some(road) = path {
+                    for hex in road {
+                        if let Some((tile, _)) = hex_map.get_mut(hex) {
+                            if tile.biome != Biome::City && tile.biome != Biome::CityCenter {
+                                tile.biome = Biome::Road;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Self {
             name: Self::random_name(),
-            tiles,
+            tiles: hex_map,
             region_noise,
-            storage,
+            cities,
         }
+    }
+
+    fn find_cluster_rec(
+        hex: Hex,
+        biome: Biome,
+        deep: usize,
+        visited: &mut HashSet<Hex>,
+        map: &HexagonalMap<(Tile, ResourceStorage)>,
+    ) -> Vec<Hex> {
+        let mut cluster = Vec::new();
+
+        if deep == 0 {
+            return cluster;
+        }
+
+        for h in hex.all_diagonals() {
+            if visited.contains(&h) {
+                continue;
+            }
+
+            visited.insert(h);
+
+            if let Some((t, _)) = map.get(h) {
+                if t.biome == biome {
+                    cluster.push(h);
+                    cluster.extend(Self::find_cluster_rec(h, biome, deep, visited, map));
+                } else {
+                    // Find if the cluster is connected to a tine piece.
+                    let response = Self::find_cluster_rec(h, biome, deep - 1, visited, map);
+                    if response.is_empty() == false {
+                        cluster.push(h);
+                    }
+                }
+            }
+        }
+
+        cluster
+    }
+
+    fn find_city_clusters(map: &HexagonalMap<(Tile, ResourceStorage)>) -> Vec<HexBounds> {
+        let mut city_clusters = Vec::new();
+
+        let mut visited = HashSet::new();
+
+        for (hex, (tile, _)) in map.iter() {
+            if visited.contains(&hex) {
+                continue;
+            }
+
+            if tile.biome == Biome::City {
+                visited.insert(hex);
+
+                let clusters = Self::find_cluster_rec(hex, Biome::City, 1, &mut visited, map);
+
+                if clusters.len() > 1 {
+                    city_clusters.push(HexBounds::from_iter(clusters));
+                }
+            }
+        }
+
+        city_clusters
     }
 }
