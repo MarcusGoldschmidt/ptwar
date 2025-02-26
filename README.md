@@ -6,6 +6,20 @@ Multiplayer Hex Tile War Game whe the player controls 1 or more squads of soldie
 
 Fight for recources, build structures, logistics, and conquer the enemy.
 
+Image
+
+![game_image.png](game_image.png)
+
+### How to run
+
+```bash
+# Server mode
+cargon run --bin ptwar-server
+
+# Client mode
+cargon run --bin ptwar-ui
+```
+
 ### What I want to achieve
 
 Foxhole and HOI4 had a baby.
