@@ -21,6 +21,12 @@ pub struct Region {
     pub cities: Vec<HexBounds>,
 }
 
+#[derive(Debug)]
+pub struct RenderChunk {
+    pub biome: Biome,
+    pub tiles: Vec<Hex>,
+}
+
 impl Region {
     // TODO: Move this to a utility module with proper tests and names.
     pub fn random_name() -> String {
@@ -88,7 +94,7 @@ impl Region {
 
                     let height_diff = match tile_b.biome {
                         Biome::Water => 0.0,
-                        _ => (tile_a.height - tile_b.height).abs() * 5.0,
+                        _ => (tile_a.noise.height - tile_b.noise.height).abs() * 5.0,
                     };
 
                     let biome_b = hex_map.get(b).map(|(t, _)| t.biome).unwrap_or(Biome::City);
@@ -177,5 +183,62 @@ impl Region {
         }
 
         city_clusters
+    }
+
+    fn get_same_biome_tiles_recur(
+        &self,
+        origin_hex: Hex,
+        biome: Biome,
+        hex_bounds: &HexBounds,
+        visited: &mut HashSet<Hex>,
+    ) -> Vec<Hex> {
+        let mut cluster = Vec::new();
+
+        for neighbor in origin_hex.all_neighbors() {
+            if visited.contains(&neighbor) {
+                continue;
+            }
+
+            if hex_bounds.is_in_bounds(neighbor) {
+                self.tiles.get(neighbor).map(|(tile, _)| {
+                    if tile.biome == biome {
+                        visited.insert(neighbor);
+                        // Recur call
+                        cluster.push(neighbor);
+
+                        cluster.extend(
+                            self.get_same_biome_tiles_recur(neighbor, biome, hex_bounds, visited),
+                        );
+                    }
+                });
+            }
+        }
+
+        cluster
+    }
+
+    pub fn render_chunks(&self, chunk_center: &HexBounds) -> Vec<RenderChunk> {
+        let mut chunks = Vec::new();
+        let mut visited = HashSet::new();
+
+        for x in chunk_center.all_coords() {
+            if visited.contains(&x) {
+                continue;
+            }
+
+            let origin = self.tiles.get(x).map(|(tile, _)| {
+                let mut tiles =
+                    self.get_same_biome_tiles_recur(x, tile.biome, chunk_center, &mut visited);
+
+                tiles.push(x);
+
+                (tile.biome, tiles)
+            });
+
+            if let Some((biome, tiles)) = origin {
+                chunks.push(RenderChunk { biome, tiles });
+            }
+        }
+        chunks
     }
 }

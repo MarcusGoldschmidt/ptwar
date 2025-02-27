@@ -6,8 +6,6 @@ Multiplayer Hex Tile War Game whe the player controls 1 or more squads of soldie
 
 Fight for recources, build structures, logistics, and conquer the enemy.
 
-Image
-
 ![game_image.png](game_image.png)
 
 ### How to run

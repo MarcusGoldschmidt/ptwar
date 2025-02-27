@@ -1,5 +1,6 @@
 use crate::world::region_noise::MultiLayerNoiseValue;
-use hexx::Hex;
+use hexx::{Hex, HexBounds};
+use std::collections::HashSet;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Biome {
@@ -50,7 +51,6 @@ pub struct Tile {
     pub hex: Hex,
     pub biome: Biome,
     pub infrastructure_level: u8,
-    pub height: f64,
     pub wight: u8,
     pub slots: u8,
     pub noise: MultiLayerNoiseValue,
@@ -64,7 +64,6 @@ impl Tile {
             hex,
             biome,
             infrastructure_level: 0,
-            height: 0.0,
             wight: 100,
             slots: 3,
             noise,
